@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { LoaderCircle, Phone, Search, X } from "lucide-react";
 import { GreenApiClient, GreenApiError } from "../../api/greenApi";
-import type {
-  MessengerDefinition,
-  ResolvedRecipient,
-} from "../../messengers/messengers";
+import type { MessengerDefinition, ResolvedRecipient } from "../../messengers/messengers";
 import type { Credentials } from "../../model/types";
 import styles from "./NewChatForm.module.css";
 import ui from "../../styles/ui.module.css";
@@ -16,12 +13,7 @@ interface NewChatFormProps {
   onCancel: () => void;
 }
 
-export function NewChatForm({
-  credentials,
-  messenger,
-  onCreated,
-  onCancel,
-}: NewChatFormProps) {
+export function NewChatForm({ credentials, messenger, onCreated, onCancel }: NewChatFormProps) {
   const [recipientValue, setRecipientValue] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,11 +39,7 @@ export function NewChatForm({
     setError(null);
 
     try {
-      const recipient = await messenger.resolveRecipient(
-        client,
-        recipientValue,
-        controller.signal,
-      );
+      const recipient = await messenger.resolveRecipient(client, recipientValue, controller.signal);
 
       if (!controller.signal.aborted) {
         onCreated(recipient);
@@ -61,10 +49,7 @@ export function NewChatForm({
         return;
       }
 
-      if (
-        requestError instanceof GreenApiError ||
-        requestError instanceof Error
-      ) {
+      if (requestError instanceof GreenApiError || requestError instanceof Error) {
         setError(requestError.message);
         return;
       }
@@ -81,9 +66,7 @@ export function NewChatForm({
     <section className={styles.card}>
       <div className={styles.header}>
         <div>
-          <span className={`${ui.eyebrow} ${styles.headerEyebrow}`}>
-            НОВЫЙ ЧАТ
-          </span>
+          <span className={`${ui.eyebrow} ${styles.headerEyebrow}`}>НОВЫЙ ЧАТ</span>
           <h2>Найдите получателя</h2>
         </div>
 
@@ -99,8 +82,7 @@ export function NewChatForm({
       </div>
 
       <p className={styles.description}>
-        Введите номер в международном формате. Проверка выполнится только после
-        нажатия кнопки.
+        Введите номер в международном формате. Проверка выполнится только после нажатия кнопки.
       </p>
 
       <form className={styles.form} onSubmit={handleSubmit}>

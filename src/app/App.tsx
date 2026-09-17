@@ -1,29 +1,12 @@
 import { useState } from "react";
-import {
-  LogOut,
-  MessageCircle,
-  MessagesSquare,
-  Plus,
-  ShieldCheck,
-} from "lucide-react";
+import { LogOut, MessageCircle, MessagesSquare, Plus, ShieldCheck } from "lucide-react";
 import { AuthForm } from "../components/AuthForm/AuthForm";
 import { ChatWorkspace } from "../components/ChatWorkspace/ChatWorkspace";
 import { NewChatForm } from "../components/NewChatForm/NewChatForm";
-import {
-  getMessengerDefinition,
-  type ResolvedRecipient,
-} from "../messengers/messengers";
+import { getMessengerDefinition, type ResolvedRecipient } from "../messengers/messengers";
 import type { Credentials } from "../model/types";
-import {
-  clearChatSession,
-  loadActiveRecipient,
-  saveActiveRecipient,
-} from "../storage/chatStorage";
-import {
-  clearCredentials,
-  loadCredentials,
-  saveCredentials,
-} from "../storage/credentials";
+import { clearChatSession, loadActiveRecipient, saveActiveRecipient } from "../storage/chatStorage";
+import { clearCredentials, loadCredentials, saveCredentials } from "../storage/credentials";
 import ui from "../styles/ui.module.css";
 import styles from "./App.module.css";
 
@@ -184,11 +167,7 @@ export const App = () => {
         ) : (
           <div className={styles.actions}>
             {savedRecipient && (
-              <button
-                className={ui.primaryButton}
-                type="button"
-                onClick={handleContinueChat}
-              >
+              <button className={ui.primaryButton} type="button" onClick={handleContinueChat}>
                 <MessagesSquare aria-hidden="true" />
                 Продолжить чат
               </button>
@@ -199,19 +178,11 @@ export const App = () => {
               type="button"
               onClick={() => setIsNewChatOpen(true)}
             >
-              {savedRecipient ? (
-                <Plus aria-hidden="true" />
-              ) : (
-                <MessageCircle aria-hidden="true" />
-              )}
+              {savedRecipient ? <Plus aria-hidden="true" /> : <MessageCircle aria-hidden="true" />}
               Новый чат
             </button>
 
-            <button
-              className={ui.secondaryButton}
-              type="button"
-              onClick={handleLogout}
-            >
+            <button className={ui.secondaryButton} type="button" onClick={handleLogout}>
               <LogOut aria-hidden="true" />
               Отключиться
             </button>

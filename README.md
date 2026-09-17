@@ -1,75 +1,221 @@
-# React + TypeScript + Vite
+# GREEN-API Messenger Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Веб-клиент для отправки и получения текстовых сообщений через GREEN-API.
 
-Currently, two official plugins are available:
+## Возможности
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- подключение к инстансу GREEN-API;
+- проверка состояния инстанса;
+- выбор мессенджера:
+    - Telegram;
+    - WhatsApp;
+    - MAX;
+- проверка существования аккаунта получателя;
+- создание чата по номеру телефона;
+- отправка текстовых сообщений;
+- получение сообщений через long polling;
+- отображение статусов сообщений:
+    - отправляется;
+    - отправлено;
+    - доставлено;
+    - прочитано;
+    - ошибка;
+- повторная отправка сообщений при ошибке;
+- защита от дублирования входящих сообщений;
+- восстановление текущего чата после перезагрузки страницы;
+- хранение данных только в рамках текущей вкладки;
+- адаптивный интерфейс.
 
-## React Compiler
+## Используемые технологии
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19
+- TypeScript
+- Vite
+- CSS Modules
+- Fetch API
+- Lucide React
+- GREEN-API REST API
+- Session Storage
 
-## Expanding the ESLint configuration
+Дополнительные библиотеки управления состоянием не используются. Состояние приложения организовано средствами React.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Архитектура
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Проект разделён на несколько слоёв:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```text
+src/
+├── api/
+│   └── greenApi.ts
+├── app/
+│   ├── App.module.css
+│   └── App.tsx
+├── components/
+│   ├── AuthForm/
+│   ├── ChatWorkspace/
+│   └── NewChatForm/
+├── hooks/
+│   └── useChatMessages.ts
+├── messengers/
+│   └── messengers.ts
+├── model/
+│   └── types.ts
+├── storage/
+│   ├── chatStorage.ts
+│   └── credentials.ts
+└── styles/
+    ├── global.css
+    └── ui.module.css
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+### `api`
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Содержит универсальный HTTP-клиент GREEN-API. Клиент отвечает только за выполнение запросов и не зависит от компонентов интерфейса.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### `messengers`
 
+Содержит конфигурацию и особенности поддерживаемых мессенджеров:
+
+- тип инстанса;
+- способ проверки получателя;
+- ограничения длины сообщения;
+- подписи элементов интерфейса;
+- преобразование номера в идентификатор чата.
+
+Благодаря этому для добавления нового мессенджера не требуется переписывать формы и компоненты чата.
+
+### `hooks`
+
+`useChatMessages` управляет:
+
+- отправкой сообщений;
+- оптимистичным отображением;
+- повторной отправкой;
+- long polling;
+- обработкой входящих уведомлений;
+- статусами доставки;
+- предотвращением дубликатов;
+- сохранением истории текущего чата.
+
+### `storage`
+
+Данные авторизации, выбранный чат и сообщения сохраняются в `sessionStorage`.
+
+После закрытия вкладки данные автоматически удаляются браузером. При ручном отключении от инстанса сохранённая сессия также очищается.
+
+## Запуск проекта
+
+Установить зависимости:
+
+```bash
+npm install
 ```
+
+Запустить приложение в режиме разработки:
+
+```bash
+npm run dev
+```
+
+По умолчанию приложение будет доступно по адресу:
+
+```text
+http://localhost:5173
+```
+
+Создать production-сборку:
+
+```bash
+npm run build
+```
+
+Проверить код линтером:
+
+```bash
+npm run lint
+```
+
+Предварительно посмотреть production-сборку:
+
+```bash
+npm run preview
+```
+
+## Подключение к GREEN-API
+
+Для входа потребуются параметры инстанса из личного кабинета GREEN-API:
+
+- `apiUrl`;
+- `idInstance`;
+- `apiTokenInstance`;
+- тип подключаемого мессенджера.
+
+Пример адреса API:
+
+```text
+https://4100.api.green-api.com
+```
+
+Перед подключением инстанс должен находиться в состоянии `authorized`.
+
+## Настройка уведомлений
+
+Для получения входящих сообщений и статусов доставки в настройках инстанса должны быть включены соответствующие webhook-уведомления.
+
+Пример необходимых настроек:
+
+```json
+{
+  "incomingWebhook": "yes",
+  "outgoingWebhook": "yes",
+  "outgoingAPIMessageWebhook": "yes",
+  "outgoingMessageWebhook": "yes"
+}
+```
+
+Приложение получает события методом `receiveNotification`, обрабатывает их и удаляет из очереди методом `deleteNotification`.
+
+Если уведомления отключены, отправка сообщений продолжит работать, но входящие сообщения и обновления статусов отображаться не будут.
+
+## Работа со статусами
+
+Внутренние статусы приложения не зависят от конкретного мессенджера:
+
+```text
+sending → sent → delivered → read
+                   ↘ failed
+```
+
+Дополнительные ответы API, например `noAccount`, `suspended` или `notInGroup`, преобразуются в единый статус `failed` с понятным описанием ошибки.
+
+Приложение также защищено от событий, пришедших не по порядку: статус `read` не будет заменён более ранним статусом `delivered`.
+
+## Добавление нового мессенджера
+
+Для подключения нового клиента необходимо:
+
+1. Добавить его идентификатор в `MessengerId`.
+2. Добавить описание мессенджера в `MESSENGERS`.
+3. Реализовать функцию проверки и преобразования получателя.
+4. При необходимости дополнить нормализацию webhook-событий.
+
+Компоненты авторизации, создания чата и отображения сообщений при этом менять не требуется.
+
+## Ограничения
+
+- реализована работа с текстовыми сообщениями;
+- приложение отображает один активный чат;
+- история хранится только в текущей вкладке браузера;
+- для работы требуется настроенный и авторизованный инстанс GREEN-API;
+- серверная часть приложения отсутствует — запросы выполняются напрямую из браузера.
+
+## Проверка качества
+
+Перед сдачей проекта выполняются:
+
+```bash
+npm run build
+npm run lint
+```
+
+Автоматические тесты в рамках тестового задания не добавлялись.

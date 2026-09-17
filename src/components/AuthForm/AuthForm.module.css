@@ -97,8 +97,7 @@
   min-height: 100vh;
   padding: 42px;
   place-items: center;
-  background:
-    radial-gradient(circle at top right, #fff 0, transparent 36%), #f4f7fa;
+  background: radial-gradient(circle at top right, #fff 0, transparent 36%), #f4f7fa;
 }
 
 .card {
@@ -149,7 +148,7 @@
   padding: 4px;
   border: 1px solid var(--border);
   border-radius: 14px;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 4px;
   background: #f1f5f8;
 }

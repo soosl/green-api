@@ -1,6 +1,6 @@
-export type MessengerId = "telegram" | "whatsapp" | "max";
+export type MessengerId = "telegram" | "whatsapp";
 
-export type InstanceType = "telegram" | "whatsapp" | "v3";
+export type InstanceType = "telegram" | "whatsapp";
 
 export interface Credentials {
   messenger: MessengerId;
@@ -10,12 +10,7 @@ export interface Credentials {
 }
 
 export type InstanceState =
-  | "authorized"
-  | "notAuthorized"
-  | "blocked"
-  | "suspended"
-  | "starting"
-  | "pendingPassword";
+  "authorized" | "notAuthorized" | "blocked" | "suspended" | "starting" | "pendingPassword";
 
 export interface InstanceStateResponse {
   stateInstance: InstanceState;
@@ -73,5 +68,4 @@ export interface ChatMessage {
   error?: string;
 }
 
-export type MessageStatus =
-  "sending" | "sent" | "delivered" | "read" | "failed";
+export type MessageStatus = "sending" | "sent" | "delivered" | "read" | "failed";

@@ -5,16 +5,10 @@ import {
   type MessengerDefinition,
   type ResolvedRecipient,
 } from "../messengers/messengers";
-import type {
-  ChatMessage,
-  Credentials,
-  IncomingNotification,
-  MessageStatus,
-} from "../model/types";
+import type { ChatMessage, Credentials, IncomingNotification, MessageStatus } from "../model/types";
 import { loadChatMessages, saveChatMessages } from "../storage/chatStorage";
 
-export type NotificationStatus =
-  "connecting" | "connected" | "reconnecting" | "mismatch";
+export type NotificationStatus = "connecting" | "connected" | "reconnecting" | "mismatch";
 
 interface UseChatMessagesResult {
   messages: ChatMessage[];
@@ -48,9 +42,7 @@ function wait(milliseconds: number, signal: AbortSignal): Promise<void> {
 }
 
 function getErrorMessage(error: unknown): string {
-  return error instanceof Error
-    ? error.message
-    : "Не удалось получить входящие сообщения";
+  return error instanceof Error ? error.message : "Не удалось получить входящие сообщения";
 }
 
 export function useChatMessages(
@@ -62,12 +54,9 @@ export function useChatMessages(
     loadChatMessages(credentials, recipient.chatId),
   );
 
-  const [notificationStatus, setNotificationStatus] =
-    useState<NotificationStatus>("connecting");
+  const [notificationStatus, setNotificationStatus] = useState<NotificationStatus>("connecting");
 
-  const [notificationError, setNotificationError] = useState<string | null>(
-    null,
-  );
+  const [notificationError, setNotificationError] = useState<string | null>(null);
 
   const activeSendRequests = useRef(new Set<AbortController>());
   const pendingStatuses = useRef(new Map<string, NormalizedMessageStatus>());
@@ -88,15 +77,27 @@ export function useChatMessages(
     };
   }, []);
 
-  const updateMessage = useCallback(
-    (messageId: string, patch: Partial<ChatMessage>) => {
-      setMessages((currentMessages) =>
-        currentMessages.map((message) =>
-          message.id === messageId ? { ...message, ...patch } : message,
-        ),
-      );
+  const updateMessage = useCallback((messageId: string, patch: Partial<ChatMessage>) => {
+    setMessages((currentMessages) =>
+      currentMessages.map((message) =>
+        message.id === messageId ? { ...message, ...patch } : message,
+      ),
+    );
+  }, []);
+
+  const isCurrentRecipient = useCallback(
+    (chatId?: string) => {
+      if (!chatId) {
+        return false;
+      }
+
+      if (chatId === recipient.chatId) {
+        return true;
+      }
+
+      return messenger.id === "whatsapp" && chatId === `${recipient.phoneNumber}@c.us`;
     },
-    [],
+    [messenger.id, recipient.chatId, recipient.phoneNumber],
   );
 
   const appendIncomingMessage = useCallback(
@@ -115,14 +116,13 @@ export function useChatMessages(
       const text = body.messageData.textMessageData?.textMessage;
       const apiMessageId = body.idMessage;
 
-      if (!chatId || !text || !apiMessageId || chatId !== recipient.chatId) {
+      if (!chatId || !text || !apiMessageId || !isCurrentRecipient(chatId)) {
         return;
       }
 
       setMessages((currentMessages) => {
         const alreadyExists = currentMessages.some(
-          (message) =>
-            message.chatId === chatId && message.apiMessageId === apiMessageId,
+          (message) => message.chatId === chatId && message.apiMessageId === apiMessageId,
         );
 
         if (alreadyExists) {
@@ -142,20 +142,19 @@ export function useChatMessages(
         return [...currentMessages, incomingMessage];
       });
     },
-    [recipient.chatId],
+    [isCurrentRecipient],
   );
 
   const applyOutgoingStatus = useCallback(
     (notification: IncomingNotification) => {
-      const { typeWebhook, idMessage, chatId, status, description } =
-        notification.body;
+      const { typeWebhook, idMessage, chatId, status, description } = notification.body;
 
       if (typeWebhook !== "outgoingMessageStatus" || !idMessage || !status) {
         return;
       }
 
       // Не применяем статус из другого открытого чата.
-      if (chatId && chatId !== recipient.chatId) {
+      if (chatId && !isCurrentRecipient(chatId)) {
         return;
       }
 
@@ -169,10 +168,7 @@ export function useChatMessages(
         let matched = false;
 
         const updatedMessages = currentMessages.map((message) => {
-          if (
-            message.direction !== "outgoing" ||
-            message.apiMessageId !== idMessage
-          ) {
+          if (message.direction !== "outgoing" || message.apiMessageId !== idMessage) {
             return message;
           }
 
@@ -193,27 +189,21 @@ export function useChatMessages(
 
           pendingStatuses.current.set(
             idMessage,
-            pendingStatus
-              ? selectLatestStatus(pendingStatus, normalizedStatus)
-              : normalizedStatus,
+            pendingStatus ? selectLatestStatus(pendingStatus, normalizedStatus) : normalizedStatus,
           );
         }
 
         return updatedMessages;
       });
     },
-    [recipient.chatId],
+    [isCurrentRecipient],
   );
 
   const processNotification = useCallback(
     (notification: IncomingNotification) => {
-      const notificationInstanceType =
-        notification.body.instanceData?.typeInstance;
+      const notificationInstanceType = notification.body.instanceData?.typeInstance;
 
-      if (
-        notificationInstanceType &&
-        !isNotificationForMessenger(notification, messenger)
-      ) {
+      if (notificationInstanceType && !isNotificationForMessenger(notification, messenger)) {
         throw new Error(
           `Инстанс относится к типу "${notificationInstanceType}", ` +
             `но выбран клиент ${messenger.label}.`,
@@ -270,10 +260,7 @@ export function useChatMessages(
 
           consecutiveFailures += 1;
 
-          const retryDelay = Math.min(
-            1000 * 2 ** (consecutiveFailures - 1),
-            10_000,
-          );
+          const retryDelay = Math.min(1000 * 2 ** (consecutiveFailures - 1), 10_000);
 
           setNotificationStatus("reconnecting");
           setNotificationError(getErrorMessage(requestError));
@@ -303,11 +290,7 @@ export function useChatMessages(
       });
 
       try {
-        const response = await client.sendMessage(
-          recipient.chatId,
-          text,
-          controller.signal,
-        );
+        const response = await client.sendMessage(recipient.chatId, text, controller.signal);
 
         if (controller.signal.aborted) {
           return;
@@ -332,9 +315,7 @@ export function useChatMessages(
               error: undefined,
             };
 
-            return pendingStatus
-              ? applyStatusToMessage(sentMessage, pendingStatus)
-              : sentMessage;
+            return pendingStatus ? applyStatusToMessage(sentMessage, pendingStatus) : sentMessage;
           });
         });
       } catch (requestError) {
@@ -411,8 +392,7 @@ function selectLatestStatus(
     return currentStatus;
   }
 
-  return statusPriority[nextStatus.status] >=
-    statusPriority[currentStatus.status]
+  return statusPriority[nextStatus.status] >= statusPriority[currentStatus.status]
     ? nextStatus
     : currentStatus;
 }
@@ -429,10 +409,7 @@ function applyStatusToMessage(
     nextStatus,
   );
 
-  if (
-    latestStatus.status === message.status &&
-    latestStatus.error === message.error
-  ) {
+  if (latestStatus.status === message.status && latestStatus.error === message.error) {
     return message;
   }
 
@@ -466,8 +443,7 @@ function normalizeOutgoingStatus(
     case "noAccount":
       return {
         status: "failed",
-        error:
-          description || "У получателя нет аккаунта в выбранном мессенджере",
+        error: description || "У получателя нет аккаунта в выбранном мессенджере",
       };
 
     case "suspended":

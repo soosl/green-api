@@ -87,11 +87,7 @@ export class GreenApiClient {
     const body = await readResponse(response);
 
     if (!response.ok) {
-      throw new GreenApiError(
-        getApiErrorMessage(body, response.status),
-        response.status,
-        body,
-      );
+      throw new GreenApiError(getApiErrorMessage(body, response.status), response.status, body);
     }
 
     return body as T;
@@ -123,32 +119,15 @@ export class GreenApiClient {
     return this.get<InstanceStateResponse>("getStateInstance", signal);
   }
 
-  sendMessage(
-    chatId: string,
-    message: string,
-    signal?: AbortSignal,
-  ): Promise<SendMessageResponse> {
-    return this.post<SendMessageResponse>(
-      "sendMessage",
-      { chatId, message },
-      signal,
-    );
+  sendMessage(chatId: string, message: string, signal?: AbortSignal): Promise<SendMessageResponse> {
+    return this.post<SendMessageResponse>("sendMessage", { chatId, message }, signal);
   }
 
-  receiveNotification(
-    signal?: AbortSignal,
-  ): Promise<IncomingNotification | null> {
-    return this.get<IncomingNotification | null>(
-      "receiveNotification",
-      signal,
-      "?receiveTimeout=5",
-    );
+  receiveNotification(signal?: AbortSignal): Promise<IncomingNotification | null> {
+    return this.get<IncomingNotification | null>("receiveNotification", signal);
   }
 
-  async deleteNotification(
-    receiptId: number,
-    signal?: AbortSignal,
-  ): Promise<void> {
+  async deleteNotification(receiptId: number, signal?: AbortSignal): Promise<void> {
     await this.delete<boolean>("deleteNotification", `/${receiptId}`, signal);
   }
 }

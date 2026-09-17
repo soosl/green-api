@@ -1,9 +1,5 @@
 import type { GreenApiClient } from "../api/greenApi";
-import type {
-  IncomingNotification,
-  InstanceType,
-  MessengerId,
-} from "../model/types";
+import type { IncomingNotification, InstanceType, MessengerId } from "../model/types";
 
 export interface ResolvedRecipient {
   chatId: string;
@@ -70,9 +66,7 @@ async function resolveWithCheckAccount(
   );
 
   if (response.status === false) {
-    throw new Error(
-      response.reason ?? `Не удалось проверить аккаунт ${messengerName}`,
-    );
+    throw new Error(response.reason ?? `Не удалось проверить аккаунт ${messengerName}`);
   }
 
   if (!response.exist || !response.chatId) {
@@ -94,7 +88,7 @@ async function resolveWhatsappRecipient(
   const phoneNumber = normalizePhoneNumber(value);
   const response = await client.post<CheckWhatsappResponse>(
     "checkWhatsapp",
-    { chatId: phoneNumber },
+    { phoneNumber: Number(phoneNumber) },
     signal,
   );
 
@@ -129,23 +123,11 @@ export const MESSENGERS: Record<MessengerId, MessengerDefinition> = {
     messageMaxLength: 20_000,
     resolveRecipient: resolveWhatsappRecipient,
   },
-  max: {
-    id: "max",
-    label: "MAX",
-    instanceType: "v3",
-    recipientLabel: "Номер телефона MAX",
-    recipientPlaceholder: "+7 999 123-45-67",
-    messageMaxLength: 4096,
-    resolveRecipient: (client, value, signal) =>
-      resolveWithCheckAccount(client, value, "MAX", signal),
-  },
 };
 
 export const MESSENGER_OPTIONS = Object.values(MESSENGERS);
 
-export function getMessengerDefinition(
-  messenger: MessengerId,
-): MessengerDefinition {
+export function getMessengerDefinition(messenger: MessengerId): MessengerDefinition {
   return MESSENGERS[messenger];
 }
 
@@ -153,7 +135,5 @@ export function isNotificationForMessenger(
   notification: IncomingNotification,
   messenger: MessengerDefinition,
 ): boolean {
-  return (
-    notification.body.instanceData?.typeInstance === messenger.instanceType
-  );
+  return notification.body.instanceData?.typeInstance === messenger.instanceType;
 }

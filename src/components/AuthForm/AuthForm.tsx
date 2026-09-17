@@ -1,18 +1,7 @@
 import { useState, type FormEvent } from "react";
-import {
-  Eye,
-  EyeOff,
-  Hash,
-  KeyRound,
-  Link2,
-  LoaderCircle,
-  MessageCircle,
-} from "lucide-react";
+import { Eye, EyeOff, Hash, KeyRound, Link2, LoaderCircle, MessageCircle } from "lucide-react";
 import { GreenApiClient, GreenApiError } from "../../api/greenApi";
-import {
-  getMessengerDefinition,
-  MESSENGER_OPTIONS,
-} from "../../messengers/messengers";
+import { getMessengerDefinition, MESSENGER_OPTIONS } from "../../messengers/messengers";
 import type { Credentials, InstanceState } from "../../model/types";
 import styles from "./AuthForm.module.css";
 import ui from "../../styles/ui.module.css";
@@ -43,7 +32,8 @@ function validateCredentials(credentials: Credentials): string | null {
 
   const isGreenApiHost =
     apiUrl.hostname === "api.green-api.com" ||
-    apiUrl.hostname.endsWith(".api.green-api.com");
+    apiUrl.hostname.endsWith(".api.green-api.com") ||
+    apiUrl.hostname.endsWith(".api.greenapi.com");
 
   if (!isGreenApiHost) {
     return "Используйте apiUrl из личного кабинета GREEN-API";
@@ -62,14 +52,11 @@ function validateCredentials(credentials: Credentials): string | null {
 
 function getStateError(state: InstanceState): string {
   const messages: Record<Exclude<InstanceState, "authorized">, string> = {
-    notAuthorized:
-      "Инстанс не авторизован. Авторизуйте его в личном кабинете GREEN-API.",
+    notAuthorized: "Инстанс не авторизован. Авторизуйте его в личном кабинете GREEN-API.",
     blocked: "Аккаунт мессенджера заблокирован.",
     suspended: "На аккаунт мессенджера наложены временные ограничения.",
-    starting:
-      "Инстанс запускается. Подождите несколько минут и попробуйте снова.",
-    pendingPassword:
-      "Для завершения авторизации требуется пароль двухфакторной аутентификации.",
+    starting: "Инстанс запускается. Подождите несколько минут и попробуйте снова.",
+    pendingPassword: "Для завершения авторизации требуется пароль двухфакторной аутентификации.",
   };
 
   return state === "authorized"
@@ -78,17 +65,13 @@ function getStateError(state: InstanceState): string {
 }
 
 export function AuthForm({ onConnected }: AuthFormProps) {
-  const [credentials, setCredentials] =
-    useState<Credentials>(initialCredentials);
+  const [credentials, setCredentials] = useState<Credentials>(initialCredentials);
   const [showToken, setShowToken] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const selectedMessenger = getMessengerDefinition(credentials.messenger);
 
-  function updateField<K extends keyof Credentials>(
-    field: K,
-    value: Credentials[K],
-  ) {
+  function updateField<K extends keyof Credentials>(field: K, value: Credentials[K]) {
     setCredentials((current) => ({
       ...current,
       [field]: value,
@@ -126,10 +109,7 @@ export function AuthForm({ onConnected }: AuthFormProps) {
 
       onConnected(normalizedCredentials);
     } catch (requestError) {
-      if (
-        requestError instanceof GreenApiError ||
-        requestError instanceof Error
-      ) {
+      if (requestError instanceof GreenApiError || requestError instanceof Error) {
         setError(requestError.message);
         return;
       }
@@ -152,15 +132,11 @@ export function AuthForm({ onConnected }: AuthFormProps) {
           </div>
 
           <div className={styles.promoDescription}>
-            <span className={`${ui.eyebrow} ${styles.promoEyebrow}`}>
-              GREEN-API CLIENT
-            </span>
-            <h1>
-              Общайтесь в {selectedMessenger.label} из собственного приложения
-            </h1>
+            <span className={`${ui.eyebrow} ${styles.promoEyebrow}`}>GREEN-API CLIENT</span>
+            <h1>Общайтесь в {selectedMessenger.label} из собственного приложения</h1>
             <p>
-              Минималистичный веб-клиент для отправки и получения текстовых
-              сообщений через GREEN-API.
+              Минималистичный веб-клиент для отправки и получения текстовых сообщений через
+              GREEN-API.
             </p>
           </div>
 
@@ -211,9 +187,7 @@ export function AuthForm({ onConnected }: AuthFormProps) {
                   placeholder="https://4100.api.green-api.com"
                   autoComplete="url"
                   disabled={isSubmitting}
-                  onChange={(event) =>
-                    updateField("apiUrl", event.target.value)
-                  }
+                  onChange={(event) => updateField("apiUrl", event.target.value)}
                 />
               </div>
             </label>
@@ -229,9 +203,7 @@ export function AuthForm({ onConnected }: AuthFormProps) {
                   placeholder="4100000000"
                   autoComplete="off"
                   disabled={isSubmitting}
-                  onChange={(event) =>
-                    updateField("idInstance", event.target.value)
-                  }
+                  onChange={(event) => updateField("idInstance", event.target.value)}
                 />
               </div>
             </label>
@@ -247,9 +219,7 @@ export function AuthForm({ onConnected }: AuthFormProps) {
                   autoComplete="off"
                   spellCheck={false}
                   disabled={isSubmitting}
-                  onChange={(event) =>
-                    updateField("apiTokenInstance", event.target.value)
-                  }
+                  onChange={(event) => updateField("apiTokenInstance", event.target.value)}
                 />
                 <button
                   className={ui.inputAction}
@@ -257,11 +227,7 @@ export function AuthForm({ onConnected }: AuthFormProps) {
                   aria-label={showToken ? "Скрыть токен" : "Показать токен"}
                   onClick={() => setShowToken((current) => !current)}
                 >
-                  {showToken ? (
-                    <EyeOff aria-hidden="true" />
-                  ) : (
-                    <Eye aria-hidden="true" />
-                  )}
+                  {showToken ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
                 </button>
               </div>
             </label>
@@ -272,21 +238,14 @@ export function AuthForm({ onConnected }: AuthFormProps) {
               </div>
             )}
 
-            <button
-              className={ui.primaryButton}
-              type="submit"
-              disabled={isSubmitting}
-            >
-              {isSubmitting && (
-                <LoaderCircle className={ui.spinner} aria-hidden="true" />
-              )}
+            <button className={ui.primaryButton} type="submit" disabled={isSubmitting}>
+              {isSubmitting && <LoaderCircle className={ui.spinner} aria-hidden="true" />}
               {isSubmitting ? "Проверяем подключение" : "Подключиться"}
             </button>
           </form>
 
           <p className={styles.hint}>
-            Перед подключением авторизуйте {selectedMessenger.label}-инстанс в
-            кабинете GREEN-API.
+            Перед подключением авторизуйте {selectedMessenger.label}-инстанс в кабинете GREEN-API.
           </p>
         </div>
       </section>

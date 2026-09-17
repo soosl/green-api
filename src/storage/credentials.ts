@@ -3,12 +3,10 @@ import type { Credentials, MessengerId } from "../model/types";
 const STORAGE_KEY = "green-api-chat-credentials";
 const LEGACY_STORAGE_KEY = "green-api-telegram-credentials";
 
-const messengerIds: MessengerId[] = ["telegram", "whatsapp", "max"];
+const messengerIds: MessengerId[] = ["telegram", "whatsapp"];
 
 function isMessengerId(value: unknown): value is MessengerId {
-  return (
-    typeof value === "string" && messengerIds.includes(value as MessengerId)
-  );
+  return typeof value === "string" && messengerIds.includes(value as MessengerId);
 }
 
 export function saveCredentials(credentials: Credentials): void {
@@ -16,9 +14,7 @@ export function saveCredentials(credentials: Credentials): void {
 }
 
 export function loadCredentials(): Credentials | null {
-  const value =
-    sessionStorage.getItem(STORAGE_KEY) ??
-    sessionStorage.getItem(LEGACY_STORAGE_KEY);
+  const value = sessionStorage.getItem(STORAGE_KEY) ?? sessionStorage.getItem(LEGACY_STORAGE_KEY);
 
   if (!value) {
     return null;
@@ -36,9 +32,7 @@ export function loadCredentials(): Credentials | null {
     }
 
     return {
-      messenger: isMessengerId(stored.messenger)
-        ? stored.messenger
-        : "telegram",
+      messenger: isMessengerId(stored.messenger) ? stored.messenger : "telegram",
       apiUrl: stored.apiUrl,
       idInstance: stored.idInstance,
       apiTokenInstance: stored.apiTokenInstance,

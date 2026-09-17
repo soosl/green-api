@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type FormEvent,
-  type KeyboardEvent,
-} from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type SubmitEvent } from "react";
 import {
   AlertCircle,
   ArrowLeft,
@@ -13,16 +7,12 @@ import {
   LoaderCircle,
   LogOut,
   MessageCircle,
-  MoreVertical,
   RotateCcw,
   Send,
   UserRound,
 } from "lucide-react";
 import { useChatMessages } from "../../hooks/useChatMessages";
-import type {
-  MessengerDefinition,
-  ResolvedRecipient,
-} from "../../messengers/messengers";
+import type { MessengerDefinition, ResolvedRecipient } from "../../messengers/messengers";
 import type { ChatMessage, Credentials } from "../../model/types";
 import ui from "../../styles/ui.module.css";
 import styles from "./ChatWorkspace.module.css";
@@ -60,9 +50,7 @@ function MessageStatus({ message }: { message: ChatMessage }) {
   }
 
   if (message.status === "delivered") {
-    return (
-      <CheckCheck className={styles.messageStatus} aria-label="Доставлено" />
-    );
+    return <CheckCheck className={styles.messageStatus} aria-label="Доставлено" />;
   }
 
   if (message.status === "read") {
@@ -86,22 +74,16 @@ export function ChatWorkspace({
 }: ChatWorkspaceProps) {
   const [draft, setDraft] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const {
-    messages,
-    notificationStatus,
-    notificationError,
-    sendTextMessage,
-    retryMessage,
-  } = useChatMessages(credentials, recipient, messenger);
+  const { messages, notificationStatus, notificationError, sendTextMessage, retryMessage } =
+    useChatMessages(credentials, recipient, messenger);
 
-  const avatarLetter =
-    recipient.displayName.replace(/^[@+]/, "").charAt(0).toUpperCase() || "?";
+  const avatarLetter = recipient.displayName.replace(/^[@+]/, "").charAt(0).toUpperCase() || "?";
   const normalizedDraft = draft.trim();
   const isTooLong = draft.length > messenger.messageMaxLength;
   const canSend = normalizedDraft.length > 0 && !isTooLong;
   const connectionLabel = {
     connecting: "Подключение…",
-    connected: "В сети",
+    connected: "API подключён",
     reconnecting: "Переподключение…",
     mismatch: "Ошибка конфигурации",
   }[notificationStatus];
@@ -113,7 +95,7 @@ export function ChatWorkspace({
     });
   }, [messages]);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
 
     if (!canSend) {
@@ -125,11 +107,7 @@ export function ChatWorkspace({
   }
 
   function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (
-      event.key === "Enter" &&
-      !event.shiftKey &&
-      !event.nativeEvent.isComposing
-    ) {
+    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
       event.currentTarget.form?.requestSubmit();
     }
@@ -163,9 +141,7 @@ export function ChatWorkspace({
           <span className={styles.avatar}>{avatarLetter}</span>
           <span className={styles.chatListContent}>
             <strong>{recipient.displayName}</strong>
-            <small>
-              {messages.length > 0 ? messages.at(-1)?.text : "Чат создан"}
-            </small>
+            <small>{messages.length > 0 ? messages.at(-1)?.text : "Чат создан"}</small>
           </span>
         </button>
       </aside>
@@ -181,9 +157,7 @@ export function ChatWorkspace({
             <ArrowLeft aria-hidden="true" />
           </button>
 
-          <span className={`${styles.avatar} ${styles.avatarSmall}`}>
-            {avatarLetter}
-          </span>
+          <span className={`${styles.avatar} ${styles.avatarSmall}`}>{avatarLetter}</span>
 
           <div className={styles.contact}>
             <strong>{recipient.displayName}</strong>
@@ -200,15 +174,6 @@ export function ChatWorkspace({
             <span aria-hidden="true" />
             {connectionLabel}
           </div>
-
-          <button
-            className={ui.iconButton}
-            type="button"
-            aria-label="Дополнительные действия"
-            disabled
-          >
-            <MoreVertical aria-hidden="true" />
-          </button>
         </header>
 
         <div className={styles.messagesArea} aria-live="polite">
@@ -240,9 +205,7 @@ export function ChatWorkspace({
                     : styles.messageRow;
                 const bubbleClassName = [
                   styles.messageBubble,
-                  message.direction === "outgoing"
-                    ? styles.messageBubbleOutgoing
-                    : "",
+                  message.direction === "outgoing" ? styles.messageBubbleOutgoing : "",
                   message.status === "failed" ? styles.messageBubbleFailed : "",
                 ]
                   .filter(Boolean)
@@ -254,14 +217,10 @@ export function ChatWorkspace({
                       <p>{message.text}</p>
 
                       <div className={styles.messageMeta}>
-                        <time
-                          dateTime={new Date(message.timestamp).toISOString()}
-                        >
+                        <time dateTime={new Date(message.timestamp).toISOString()}>
                           {timeFormatter.format(message.timestamp)}
                         </time>
-                        {message.direction === "outgoing" && (
-                          <MessageStatus message={message} />
-                        )}
+                        {message.direction === "outgoing" && <MessageStatus message={message} />}
                       </div>
 
                       {message.status === "failed" && (
@@ -269,9 +228,7 @@ export function ChatWorkspace({
                           <span>{message.error ?? "Ошибка отправки"}</span>
                           <button
                             type="button"
-                            onClick={() =>
-                              void retryMessage(message.id, message.text)
-                            }
+                            onClick={() => void retryMessage(message.id, message.text)}
                           >
                             <RotateCcw aria-hidden="true" />
                             Повторить

@@ -5,9 +5,7 @@ const STORAGE_VERSION = "v1";
 const MAX_STORED_MESSAGES = 200;
 
 function getInstanceScope(credentials: Credentials): string {
-  return [STORAGE_VERSION, credentials.messenger, credentials.idInstance].join(
-    ":",
-  );
+  return [STORAGE_VERSION, credentials.messenger, credentials.idInstance].join(":");
 }
 
 function getActiveRecipientKey(credentials: Credentials): string {
@@ -15,10 +13,7 @@ function getActiveRecipientKey(credentials: Credentials): string {
 }
 
 function getMessagesKey(credentials: Credentials, chatId: string): string {
-  return (
-    `green-api:messages:${getInstanceScope(credentials)}:` +
-    encodeURIComponent(chatId)
-  );
+  return `green-api:messages:${getInstanceScope(credentials)}:` + encodeURIComponent(chatId);
 }
 
 function isResolvedRecipient(value: unknown): value is ResolvedRecipient {
@@ -63,23 +58,15 @@ function normalizeRestoredMessage(message: ChatMessage): ChatMessage {
   };
 }
 
-export function saveActiveRecipient(
-  credentials: Credentials,
-  recipient: ResolvedRecipient,
-): void {
+export function saveActiveRecipient(credentials: Credentials, recipient: ResolvedRecipient): void {
   try {
-    sessionStorage.setItem(
-      getActiveRecipientKey(credentials),
-      JSON.stringify(recipient),
-    );
+    sessionStorage.setItem(getActiveRecipientKey(credentials), JSON.stringify(recipient));
   } catch (err) {
     console.log(err);
   }
 }
 
-export function loadActiveRecipient(
-  credentials: Credentials,
-): ResolvedRecipient | null {
+export function loadActiveRecipient(credentials: Credentials): ResolvedRecipient | null {
   try {
     const value = sessionStorage.getItem(getActiveRecipientKey(credentials));
 
@@ -103,19 +90,13 @@ export function saveChatMessages(
   try {
     const messagesToStore = messages.slice(-MAX_STORED_MESSAGES);
 
-    sessionStorage.setItem(
-      getMessagesKey(credentials, chatId),
-      JSON.stringify(messagesToStore),
-    );
+    sessionStorage.setItem(getMessagesKey(credentials, chatId), JSON.stringify(messagesToStore));
   } catch (err) {
     console.log(err);
   }
 }
 
-export function loadChatMessages(
-  credentials: Credentials,
-  chatId: string,
-): ChatMessage[] {
+export function loadChatMessages(credentials: Credentials, chatId: string): ChatMessage[] {
   try {
     const value = sessionStorage.getItem(getMessagesKey(credentials, chatId));
 
@@ -129,10 +110,7 @@ export function loadChatMessages(
       return [];
     }
 
-    return parsed
-      .filter(isChatMessage)
-      .map(normalizeRestoredMessage)
-      .slice(-MAX_STORED_MESSAGES);
+    return parsed.filter(isChatMessage).map(normalizeRestoredMessage).slice(-MAX_STORED_MESSAGES);
   } catch {
     return [];
   }

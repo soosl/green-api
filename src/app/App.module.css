@@ -3,8 +3,7 @@
   min-height: 100vh;
   padding: 24px;
   place-items: center;
-  background:
-    radial-gradient(circle at top left, #d9edff, transparent 34%), #eef3f7;
+  background: radial-gradient(circle at top left, #d9edff, transparent 34%), #eef3f7;
 }
 
 .card {
