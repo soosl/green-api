@@ -29,26 +29,34 @@ export interface IncomingNotification {
   receiptId: number;
   body: {
     typeWebhook: string;
-    timestamp: number;
+    timestamp?: number;
     idMessage?: string;
+
     instanceData?: {
-      idInstance: number;
-      wid: string;
-      typeInstance: InstanceType;
+      idInstance?: number;
+      wid?: string;
+      typeInstance?: InstanceType;
     };
+
+    // Статусы исходящих сообщений приходят на верхнем уровне body
+    chatId?: string;
+    status?: string;
+    description?: string;
+    sendByApi?: boolean;
+
     senderData?: {
-      chatId: string;
-      chatType?: string;
+      chatId?: string;
       sender?: string;
-      chatName?: string;
       senderName?: string;
-      senderContactName?: string;
-      senderPhoneNumber?: number;
     };
+
     messageData?: {
-      typeMessage: string;
+      typeMessage?: string;
       textMessageData?: {
-        textMessage: string;
+        textMessage?: string;
+      };
+      extendedTextMessageData?: {
+        text?: string;
       };
     };
   };
@@ -61,6 +69,9 @@ export interface ChatMessage {
   text: string;
   direction: "incoming" | "outgoing";
   timestamp: number;
-  status?: "sending" | "sent" | "failed";
+  status?: MessageStatus;
   error?: string;
 }
+
+export type MessageStatus =
+  "sending" | "sent" | "delivered" | "read" | "failed";

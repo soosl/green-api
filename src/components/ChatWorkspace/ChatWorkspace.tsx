@@ -9,6 +9,7 @@ import {
   AlertCircle,
   ArrowLeft,
   Check,
+  CheckCheck,
   LoaderCircle,
   LogOut,
   MessageCircle,
@@ -54,6 +55,21 @@ function MessageStatus({ message }: { message: ChatMessage }) {
       <AlertCircle
         className={`${styles.messageStatus} ${styles.messageStatusFailed}`}
         aria-label="Ошибка отправки"
+      />
+    );
+  }
+
+  if (message.status === "delivered") {
+    return (
+      <CheckCheck className={styles.messageStatus} aria-label="Доставлено" />
+    );
+  }
+
+  if (message.status === "read") {
+    return (
+      <CheckCheck
+        className={`${styles.messageStatus} ${styles.messageStatusRead}`}
+        aria-label="Прочитано"
       />
     );
   }
@@ -243,7 +259,9 @@ export function ChatWorkspace({
                         >
                           {timeFormatter.format(message.timestamp)}
                         </time>
-                        <MessageStatus message={message} />
+                        {message.direction === "outgoing" && (
+                          <MessageStatus message={message} />
+                        )}
                       </div>
 
                       {message.status === "failed" && (

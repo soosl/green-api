@@ -9,6 +9,7 @@ import type {
   ChatMessage,
   Credentials,
   IncomingNotification,
+  MessageStatus,
 } from "../model/types";
 import { loadChatMessages, saveChatMessages } from "../storage/chatStorage";
 
@@ -69,6 +70,7 @@ export function useChatMessages(
   );
 
   const activeSendRequests = useRef(new Set<AbortController>());
+  const pendingStatuses = useRef(new Map<string, NormalizedMessageStatus>());
 
   const client = useMemo(() => new GreenApiClient(credentials), [credentials]);
 
@@ -143,6 +145,66 @@ export function useChatMessages(
     [recipient.chatId],
   );
 
+  const applyOutgoingStatus = useCallback(
+    (notification: IncomingNotification) => {
+      const { typeWebhook, idMessage, chatId, status, description } =
+        notification.body;
+
+      if (typeWebhook !== "outgoingMessageStatus" || !idMessage || !status) {
+        return;
+      }
+
+      // Не применяем статус из другого открытого чата.
+      if (chatId && chatId !== recipient.chatId) {
+        return;
+      }
+
+      const normalizedStatus = normalizeOutgoingStatus(status, description);
+
+      if (!normalizedStatus) {
+        return;
+      }
+
+      setMessages((currentMessages) => {
+        let matched = false;
+
+        const updatedMessages = currentMessages.map((message) => {
+          if (
+            message.direction !== "outgoing" ||
+            message.apiMessageId !== idMessage
+          ) {
+            return message;
+          }
+
+          matched = true;
+
+          return applyStatusToMessage(message, normalizedStatus);
+        });
+
+        const hasPendingOutgoingMessage = currentMessages.some(
+          (message) =>
+            message.direction === "outgoing" &&
+            message.status === "sending" &&
+            !message.apiMessageId,
+        );
+
+        if (!matched && hasPendingOutgoingMessage) {
+          const pendingStatus = pendingStatuses.current.get(idMessage);
+
+          pendingStatuses.current.set(
+            idMessage,
+            pendingStatus
+              ? selectLatestStatus(pendingStatus, normalizedStatus)
+              : normalizedStatus,
+          );
+        }
+
+        return updatedMessages;
+      });
+    },
+    [recipient.chatId],
+  );
+
   const processNotification = useCallback(
     (notification: IncomingNotification) => {
       const notificationInstanceType =
@@ -158,9 +220,14 @@ export function useChatMessages(
         );
       }
 
+      if (notification.body.typeWebhook === "outgoingMessageStatus") {
+        applyOutgoingStatus(notification);
+        return;
+      }
+
       appendIncomingMessage(notification);
     },
-    [appendIncomingMessage, messenger],
+    [appendIncomingMessage, applyOutgoingStatus, messenger],
   );
 
   useEffect(() => {
@@ -230,6 +297,7 @@ export function useChatMessages(
       activeSendRequests.current.add(controller);
 
       updateMessage(messageId, {
+        apiMessageId: undefined,
         status: "sending",
         error: undefined,
       });
@@ -245,10 +313,29 @@ export function useChatMessages(
           return;
         }
 
-        updateMessage(messageId, {
-          apiMessageId: response.idMessage,
-          status: "sent",
-          error: undefined,
+        setMessages((currentMessages) => {
+          const pendingStatus = pendingStatuses.current.get(response.idMessage);
+
+          if (pendingStatus) {
+            pendingStatuses.current.delete(response.idMessage);
+          }
+
+          return currentMessages.map((message) => {
+            if (message.id !== messageId) {
+              return message;
+            }
+
+            const sentMessage: ChatMessage = {
+              ...message,
+              apiMessageId: response.idMessage,
+              status: "sent",
+              error: undefined,
+            };
+
+            return pendingStatus
+              ? applyStatusToMessage(sentMessage, pendingStatus)
+              : sentMessage;
+          });
         });
       } catch (requestError) {
         if (controller.signal.aborted) {
@@ -298,4 +385,111 @@ export function useChatMessages(
     sendTextMessage,
     retryMessage,
   };
+}
+const statusPriority: Record<MessageStatus, number> = {
+  sending: 0,
+  sent: 1,
+  delivered: 2,
+  read: 3,
+  failed: 4,
+};
+
+interface NormalizedMessageStatus {
+  status: MessageStatus;
+  error?: string;
+}
+
+function selectLatestStatus(
+  currentStatus: NormalizedMessageStatus,
+  nextStatus: NormalizedMessageStatus,
+): NormalizedMessageStatus {
+  if (nextStatus.status === "failed") {
+    return nextStatus;
+  }
+
+  if (currentStatus.status === "failed") {
+    return currentStatus;
+  }
+
+  return statusPriority[nextStatus.status] >=
+    statusPriority[currentStatus.status]
+    ? nextStatus
+    : currentStatus;
+}
+
+function applyStatusToMessage(
+  message: ChatMessage,
+  nextStatus: NormalizedMessageStatus,
+): ChatMessage {
+  const latestStatus = selectLatestStatus(
+    {
+      status: message.status ?? "sent",
+      error: message.error,
+    },
+    nextStatus,
+  );
+
+  if (
+    latestStatus.status === message.status &&
+    latestStatus.error === message.error
+  ) {
+    return message;
+  }
+
+  return {
+    ...message,
+    status: latestStatus.status,
+    error: latestStatus.error,
+  };
+}
+
+function normalizeOutgoingStatus(
+  status: string,
+  description?: string,
+): NormalizedMessageStatus | null {
+  switch (status) {
+    case "sent":
+      return { status: "sent" };
+
+    case "delivered":
+      return { status: "delivered" };
+
+    case "read":
+      return { status: "read" };
+
+    case "failed":
+      return {
+        status: "failed",
+        error: description || "Не удалось доставить сообщение",
+      };
+
+    case "noAccount":
+      return {
+        status: "failed",
+        error:
+          description || "У получателя нет аккаунта в выбранном мессенджере",
+      };
+
+    case "suspended":
+      return {
+        status: "failed",
+        error: description || "Аккаунт отправителя временно заблокирован",
+      };
+
+    case "notInGroup":
+      return {
+        status: "failed",
+        error: description || "Отправитель больше не состоит в группе",
+      };
+
+    case "yellowCard":
+      return {
+        status: "failed",
+        error: description || "Отправка сообщения ограничена мессенджером",
+      };
+
+    default:
+      // Неизвестный будущий статус не ломает приложение.
+      return null;
+  }
 }

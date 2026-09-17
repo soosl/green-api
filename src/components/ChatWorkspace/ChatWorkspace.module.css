@@ -266,6 +266,10 @@
   color: var(--danger);
 }
 
+.messageStatusRead {
+  color: var(--primary);
+}
+
 .messageError {
   display: flex;
   margin-top: 8px;
