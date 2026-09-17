@@ -14,6 +14,8 @@ import {
   MESSENGER_OPTIONS,
 } from "../../messengers/messengers";
 import type { Credentials, InstanceState } from "../../model/types";
+import styles from "./AuthForm.module.css";
+import ui from "../../styles/ui.module.css";
 
 interface AuthFormProps {
   onConnected: (credentials: Credentials) => void;
@@ -139,18 +141,20 @@ export function AuthForm({ onConnected }: AuthFormProps) {
   }
 
   return (
-    <main className="auth-page">
-      <section className="auth-promo">
-        <div className="auth-promo__content">
-          <div className="brand">
-            <div className="brand__icon">
+    <main className={styles.page}>
+      <section className={styles.promo}>
+        <div className={styles.promoContent}>
+          <div className={ui.brand}>
+            <div className={ui.brandIcon}>
               <MessageCircle aria-hidden="true" />
             </div>
             <span>Green {selectedMessenger.label}</span>
           </div>
 
-          <div className="auth-promo__description">
-            <span className="eyebrow">GREEN-API CLIENT</span>
+          <div className={styles.promoDescription}>
+            <span className={`${ui.eyebrow} ${styles.promoEyebrow}`}>
+              GREEN-API CLIENT
+            </span>
             <h1>
               Общайтесь в {selectedMessenger.label} из собственного приложения
             </h1>
@@ -160,32 +164,32 @@ export function AuthForm({ onConnected }: AuthFormProps) {
             </p>
           </div>
 
-          <div className="auth-promo__security">
+          <div className={styles.security}>
             <KeyRound aria-hidden="true" />
             <p>Данные инстанса хранятся только до закрытия вкладки.</p>
           </div>
         </div>
       </section>
 
-      <section className="auth-panel">
-        <div className="auth-card">
-          <div className="auth-card__header">
-            <span className="eyebrow">ПОДКЛЮЧЕНИЕ</span>
+      <section className={styles.panel}>
+        <div className={styles.card}>
+          <div className={styles.header}>
+            <span className={ui.eyebrow}>ПОДКЛЮЧЕНИЕ</span>
             <h2>Войдите в чат</h2>
             <p>Укажите параметры инстанса из личного кабинета GREEN-API.</p>
           </div>
 
-          <form className="auth-form" onSubmit={handleSubmit}>
-            <fieldset className="messenger-field">
+          <form className={styles.form} onSubmit={handleSubmit}>
+            <fieldset className={styles.messengerField}>
               <legend>Мессенджер</legend>
-              <div className="messenger-switch">
+              <div className={styles.messengerSwitch}>
                 {MESSENGER_OPTIONS.map((messenger) => (
                   <button
                     key={messenger.id}
                     className={
                       credentials.messenger === messenger.id
-                        ? "messenger-switch__button messenger-switch__button--active"
-                        : "messenger-switch__button"
+                        ? `${styles.messengerButton} ${styles.messengerButtonActive}`
+                        : styles.messengerButton
                     }
                     type="button"
                     disabled={isSubmitting}
@@ -197,9 +201,9 @@ export function AuthForm({ onConnected }: AuthFormProps) {
               </div>
             </fieldset>
 
-            <label className="form-field">
+            <label className={ui.formField}>
               <span>apiUrl</span>
-              <div className="input-control">
+              <div className={ui.inputControl}>
                 <Link2 aria-hidden="true" />
                 <input
                   type="url"
@@ -214,9 +218,9 @@ export function AuthForm({ onConnected }: AuthFormProps) {
               </div>
             </label>
 
-            <label className="form-field">
+            <label className={ui.formField}>
               <span>idInstance</span>
-              <div className="input-control">
+              <div className={ui.inputControl}>
                 <Hash aria-hidden="true" />
                 <input
                   type="text"
@@ -232,9 +236,9 @@ export function AuthForm({ onConnected }: AuthFormProps) {
               </div>
             </label>
 
-            <label className="form-field">
+            <label className={ui.formField}>
               <span>apiTokenInstance</span>
-              <div className="input-control">
+              <div className={ui.inputControl}>
                 <KeyRound aria-hidden="true" />
                 <input
                   type={showToken ? "text" : "password"}
@@ -248,7 +252,7 @@ export function AuthForm({ onConnected }: AuthFormProps) {
                   }
                 />
                 <button
-                  className="input-control__action"
+                  className={ui.inputAction}
                   type="button"
                   aria-label={showToken ? "Скрыть токен" : "Показать токен"}
                   onClick={() => setShowToken((current) => !current)}
@@ -263,24 +267,24 @@ export function AuthForm({ onConnected }: AuthFormProps) {
             </label>
 
             {error && (
-              <div className="form-error" role="alert">
+              <div className={ui.formError} role="alert">
                 {error}
               </div>
             )}
 
             <button
-              className="primary-button"
+              className={ui.primaryButton}
               type="submit"
               disabled={isSubmitting}
             >
               {isSubmitting && (
-                <LoaderCircle className="spinner" aria-hidden="true" />
+                <LoaderCircle className={ui.spinner} aria-hidden="true" />
               )}
               {isSubmitting ? "Проверяем подключение" : "Подключиться"}
             </button>
           </form>
 
-          <p className="auth-card__hint">
+          <p className={styles.hint}>
             Перед подключением авторизуйте {selectedMessenger.label}-инстанс в
             кабинете GREEN-API.
           </p>

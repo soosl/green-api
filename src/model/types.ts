@@ -56,9 +56,11 @@ export interface IncomingNotification {
 
 export interface ChatMessage {
   id: string;
+  apiMessageId?: string;
   chatId: string;
   text: string;
   direction: "incoming" | "outgoing";
   timestamp: number;
   status?: "sending" | "sent" | "failed";
+  error?: string;
 }

@@ -1,0 +1,101 @@
+.page {
+  display: grid;
+  min-height: 100vh;
+  padding: 24px;
+  place-items: center;
+  background:
+    radial-gradient(circle at top left, #d9edff, transparent 34%), #eef3f7;
+}
+
+.card {
+  width: min(100%, 560px);
+  padding: 48px;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  text-align: center;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.statusIcon {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 26px;
+  border-radius: 24px;
+  place-items: center;
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.statusIcon svg {
+  width: 34px;
+  height: 34px;
+}
+
+.card h1 {
+  margin: 0;
+  font-size: 32px;
+  letter-spacing: -0.03em;
+}
+
+.description {
+  margin: 14px auto 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.instanceInfo {
+  display: grid;
+  margin: 32px 0;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--border);
+  text-align: left;
+}
+
+.instanceInfo div {
+  display: grid;
+  padding: 15px 18px;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 16px;
+  background: #f9fbfc;
+}
+
+.instanceInfo dt {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.instanceInfo dd {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .page {
+    padding: 20px 12px 40px;
+  }
+
+  .card {
+    padding: 28px 20px;
+    border-radius: 22px;
+  }
+
+  .actions {
+    grid-template-columns: 1fr;
+  }
+}

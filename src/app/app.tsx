@@ -13,6 +13,8 @@ import {
   loadCredentials,
   saveCredentials,
 } from "../storage/credentials";
+import styles from "./App.module.css";
+import ui from "../styles/ui.module.css";
 
 export const App = () => {
   const [credentials, setCredentials] = useState<Credentials | null>(
@@ -44,6 +46,7 @@ export const App = () => {
   if (recipient) {
     return (
       <ChatWorkspace
+        credentials={credentials}
         messenger={messenger}
         recipient={recipient}
         onBack={() => setRecipient(null)}
@@ -53,19 +56,21 @@ export const App = () => {
   }
 
   return (
-    <main className="connected-page">
-      <section className="connected-card">
-        <div className="connected-card__icon">
+    <main className={styles.page}>
+      <section className={styles.card}>
+        <div className={styles.statusIcon}>
           <ShieldCheck aria-hidden="true" />
         </div>
 
-        <span className="eyebrow">ПОДКЛЮЧЕНИЕ УСТАНОВЛЕНО</span>
+        <span className={ui.eyebrow}>ПОДКЛЮЧЕНИЕ УСТАНОВЛЕНО</span>
 
         <h1>{messenger.label}-инстанс готов</h1>
 
-        <p>Данные проверены. Теперь можно создать чат в {messenger.label}.</p>
+        <p className={styles.description}>
+          Данные проверены. Теперь можно создать чат в {messenger.label}.
+        </p>
 
-        <dl className="instance-info">
+        <dl className={styles.instanceInfo}>
           <div>
             <dt>Мессенджер</dt>
             <dd>{messenger.label}</dd>
@@ -93,9 +98,9 @@ export const App = () => {
             onCancel={() => setIsNewChatOpen(false)}
           />
         ) : (
-          <div className="connected-card__actions">
+          <div className={styles.actions}>
             <button
-              className="primary-button"
+              className={ui.primaryButton}
               type="button"
               onClick={() => setIsNewChatOpen(true)}
             >
@@ -104,7 +109,7 @@ export const App = () => {
             </button>
 
             <button
-              className="secondary-button"
+              className={ui.secondaryButton}
               type="button"
               onClick={handleLogout}
             >

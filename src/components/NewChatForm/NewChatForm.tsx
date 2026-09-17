@@ -6,6 +6,8 @@ import type {
   ResolvedRecipient,
 } from "../../messengers/messengers";
 import type { Credentials } from "../../model/types";
+import styles from "./NewChatForm.module.css";
+import ui from "../../styles/ui.module.css";
 
 interface NewChatFormProps {
   credentials: Credentials;
@@ -76,15 +78,17 @@ export function NewChatForm({
   }
 
   return (
-    <section className="new-chat-card">
-      <div className="new-chat-card__header">
+    <section className={styles.card}>
+      <div className={styles.header}>
         <div>
-          <span className="eyebrow">НОВЫЙ ЧАТ</span>
+          <span className={`${ui.eyebrow} ${styles.headerEyebrow}`}>
+            НОВЫЙ ЧАТ
+          </span>
           <h2>Найдите получателя</h2>
         </div>
 
         <button
-          className="icon-button"
+          className={ui.iconButton}
           type="button"
           aria-label="Закрыть форму"
           disabled={isSubmitting}
@@ -94,16 +98,16 @@ export function NewChatForm({
         </button>
       </div>
 
-      <p className="new-chat-card__description">
+      <p className={styles.description}>
         Введите номер в международном формате. Проверка выполнится только после
         нажатия кнопки.
       </p>
 
-      <form className="new-chat-form" onSubmit={handleSubmit}>
-        <label className="form-field">
+      <form className={styles.form} onSubmit={handleSubmit}>
+        <label className={ui.formField}>
           <span>{messenger.recipientLabel}</span>
 
-          <div className="input-control">
+          <div className={ui.inputControl}>
             <Phone aria-hidden="true" />
 
             <input
@@ -122,18 +126,18 @@ export function NewChatForm({
         </label>
 
         {error && (
-          <div className="form-error" role="alert">
+          <div className={ui.formError} role="alert">
             {error}
           </div>
         )}
 
         <button
-          className="primary-button"
+          className={ui.primaryButton}
           type="submit"
           disabled={isSubmitting || !recipientValue.trim()}
         >
           {isSubmitting ? (
-            <LoaderCircle className="spinner" aria-hidden="true" />
+            <LoaderCircle className={ui.spinner} aria-hidden="true" />
           ) : (
             <Search aria-hidden="true" />
           )}
