@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { LogOut, MessageCircle, ShieldCheck } from "lucide-react";
+import {
+  LogOut,
+  MessageCircle,
+  MessagesSquare,
+  Plus,
+  ShieldCheck,
+} from "lucide-react";
 import { AuthForm } from "../components/AuthForm/AuthForm";
 import { ChatWorkspace } from "../components/ChatWorkspace/ChatWorkspace";
 import { NewChatForm } from "../components/NewChatForm/NewChatForm";
@@ -9,31 +15,112 @@ import {
 } from "../messengers/messengers";
 import type { Credentials } from "../model/types";
 import {
+  clearChatSession,
+  loadActiveRecipient,
+  saveActiveRecipient,
+} from "../storage/chatStorage";
+import {
   clearCredentials,
   loadCredentials,
   saveCredentials,
 } from "../storage/credentials";
-import styles from "./App.module.css";
 import ui from "../styles/ui.module.css";
+import styles from "./App.module.css";
+
+interface AppSession {
+  credentials: Credentials | null;
+  recipient: ResolvedRecipient | null;
+  savedRecipient: ResolvedRecipient | null;
+}
+
+function loadInitialSession(): AppSession {
+  const credentials = loadCredentials();
+
+  if (!credentials) {
+    return {
+      credentials: null,
+      recipient: null,
+      savedRecipient: null,
+    };
+  }
+
+  const savedRecipient = loadActiveRecipient(credentials);
+
+  return {
+    credentials,
+    recipient: savedRecipient,
+    savedRecipient,
+  };
+}
 
 export const App = () => {
-  const [credentials, setCredentials] = useState<Credentials | null>(
-    loadCredentials,
-  );
-  const [recipient, setRecipient] = useState<ResolvedRecipient | null>(null);
+  const [session, setSession] = useState<AppSession>(loadInitialSession);
+
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
+
+  const { credentials, recipient, savedRecipient } = session;
 
   function handleConnected(nextCredentials: Credentials) {
     saveCredentials(nextCredentials);
-    setCredentials(nextCredentials);
-    setRecipient(null);
+
+    const restoredRecipient = loadActiveRecipient(nextCredentials);
+
+    setSession({
+      credentials: nextCredentials,
+      recipient: restoredRecipient,
+      savedRecipient: restoredRecipient,
+    });
+
     setIsNewChatOpen(false);
   }
 
+  function handleChatCreated(nextRecipient: ResolvedRecipient) {
+    if (!credentials) {
+      return;
+    }
+
+    saveActiveRecipient(credentials, nextRecipient);
+
+    setSession((currentSession) => ({
+      ...currentSession,
+      recipient: nextRecipient,
+      savedRecipient: nextRecipient,
+    }));
+
+    setIsNewChatOpen(false);
+  }
+
+  function handleBack() {
+    setSession((currentSession) => ({
+      ...currentSession,
+      recipient: null,
+    }));
+  }
+
+  function handleContinueChat() {
+    if (!savedRecipient) {
+      return;
+    }
+
+    setSession((currentSession) => ({
+      ...currentSession,
+      recipient: savedRecipient,
+    }));
+  }
+
   function handleLogout() {
+    if (credentials) {
+      clearChatSession(credentials);
+    }
+
     clearCredentials();
-    setCredentials(null);
-    setRecipient(null);
+
+    setSession({
+      credentials: null,
+      recipient: null,
+      savedRecipient: null,
+    });
+
     setIsNewChatOpen(false);
   }
 
@@ -49,7 +136,7 @@ export const App = () => {
         credentials={credentials}
         messenger={messenger}
         recipient={recipient}
-        onBack={() => setRecipient(null)}
+        onBack={handleBack}
         onLogout={handleLogout}
       />
     );
@@ -67,7 +154,7 @@ export const App = () => {
         <h1>{messenger.label}-инстанс готов</h1>
 
         <p className={styles.description}>
-          Данные проверены. Теперь можно создать чат в {messenger.label}.
+          Данные проверены. Можно продолжить существующий чат или создать новый.
         </p>
 
         <dl className={styles.instanceInfo}>
@@ -91,21 +178,33 @@ export const App = () => {
           <NewChatForm
             credentials={credentials}
             messenger={messenger}
-            onCreated={(nextRecipient) => {
-              setRecipient(nextRecipient);
-              setIsNewChatOpen(false);
-            }}
+            onCreated={handleChatCreated}
             onCancel={() => setIsNewChatOpen(false)}
           />
         ) : (
           <div className={styles.actions}>
+            {savedRecipient && (
+              <button
+                className={ui.primaryButton}
+                type="button"
+                onClick={handleContinueChat}
+              >
+                <MessagesSquare aria-hidden="true" />
+                Продолжить чат
+              </button>
+            )}
+
             <button
-              className={ui.primaryButton}
+              className={savedRecipient ? ui.secondaryButton : ui.primaryButton}
               type="button"
               onClick={() => setIsNewChatOpen(true)}
             >
-              <MessageCircle aria-hidden="true" />
-              Создать чат
+              {savedRecipient ? (
+                <Plus aria-hidden="true" />
+              ) : (
+                <MessageCircle aria-hidden="true" />
+              )}
+              Новый чат
             </button>
 
             <button

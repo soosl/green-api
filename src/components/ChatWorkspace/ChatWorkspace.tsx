@@ -70,16 +70,25 @@ export function ChatWorkspace({
 }: ChatWorkspaceProps) {
   const [draft, setDraft] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const { messages, sendTextMessage, retryMessage } = useChatMessages(
-    credentials,
-    recipient,
-  );
+  const {
+    messages,
+    notificationStatus,
+    notificationError,
+    sendTextMessage,
+    retryMessage,
+  } = useChatMessages(credentials, recipient, messenger);
 
   const avatarLetter =
     recipient.displayName.replace(/^[@+]/, "").charAt(0).toUpperCase() || "?";
   const normalizedDraft = draft.trim();
   const isTooLong = draft.length > messenger.messageMaxLength;
   const canSend = normalizedDraft.length > 0 && !isTooLong;
+  const connectionLabel = {
+    connecting: "Подключение…",
+    connected: "В сети",
+    reconnecting: "Переподключение…",
+    mismatch: "Ошибка конфигурации",
+  }[notificationStatus];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -162,9 +171,18 @@ export function ChatWorkspace({
 
           <div className={styles.contact}>
             <strong>{recipient.displayName}</strong>
+
             <span>
               {messenger.label} · +{recipient.phoneNumber}
             </span>
+          </div>
+
+          <div
+            className={`${styles.connectionStatus} ${styles[`connectionStatus_${notificationStatus}`]}`}
+            title={notificationError ?? connectionLabel}
+          >
+            <span aria-hidden="true" />
+            {connectionLabel}
           </div>
 
           <button
@@ -178,6 +196,17 @@ export function ChatWorkspace({
         </header>
 
         <div className={styles.messagesArea} aria-live="polite">
+          {notificationError && notificationStatus !== "connected" && (
+            <div className={styles.notificationNotice} role="status">
+              <AlertCircle aria-hidden="true" />
+
+              <span>
+                {notificationStatus === "mismatch"
+                  ? notificationError
+                  : "Связь с GREEN-API потеряна. Повторяем подключение…"}
+              </span>
+            </div>
+          )}
           {messages.length === 0 ? (
             <div className={styles.emptyChat}>
               <div className={styles.emptyChatIcon}>
