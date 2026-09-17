@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { LogOut, MessageCircle, ShieldCheck } from "lucide-react";
 import { AuthForm } from "../components/AuthForm/AuthForm";
-import { getMessengerDefinition } from "../messengers/messengers";
+import { ChatWorkspace } from "../components/ChatWorkspace/ChatWorkspace";
+import { NewChatForm } from "../components/NewChatForm/NewChatForm";
+import {
+  getMessengerDefinition,
+  type ResolvedRecipient,
+} from "../messengers/messengers";
 import type { Credentials } from "../model/types";
 import {
   clearCredentials,
@@ -13,15 +18,21 @@ export const App = () => {
   const [credentials, setCredentials] = useState<Credentials | null>(
     loadCredentials,
   );
+  const [recipient, setRecipient] = useState<ResolvedRecipient | null>(null);
+  const [isNewChatOpen, setIsNewChatOpen] = useState(false);
 
   function handleConnected(nextCredentials: Credentials) {
     saveCredentials(nextCredentials);
     setCredentials(nextCredentials);
+    setRecipient(null);
+    setIsNewChatOpen(false);
   }
 
   function handleLogout() {
     clearCredentials();
     setCredentials(null);
+    setRecipient(null);
+    setIsNewChatOpen(false);
   }
 
   if (!credentials) {
@@ -29,6 +40,17 @@ export const App = () => {
   }
 
   const messenger = getMessengerDefinition(credentials.messenger);
+
+  if (recipient) {
+    return (
+      <ChatWorkspace
+        messenger={messenger}
+        recipient={recipient}
+        onBack={() => setRecipient(null)}
+        onLogout={handleLogout}
+      />
+    );
+  }
 
   return (
     <main className="connected-page">
@@ -38,41 +60,59 @@ export const App = () => {
         </div>
 
         <span className="eyebrow">ПОДКЛЮЧЕНИЕ УСТАНОВЛЕНО</span>
+
         <h1>{messenger.label}-инстанс готов</h1>
-        <p>
-          Данные проверены. Теперь можно перейти к созданию чата в{" "}
-          {messenger.label}.
-        </p>
+
+        <p>Данные проверены. Теперь можно создать чат в {messenger.label}.</p>
 
         <dl className="instance-info">
           <div>
             <dt>Мессенджер</dt>
             <dd>{messenger.label}</dd>
           </div>
+
           <div>
             <dt>Инстанс</dt>
             <dd>{credentials.idInstance}</dd>
           </div>
+
           <div>
             <dt>API-сервер</dt>
             <dd>{credentials.apiUrl}</dd>
           </div>
         </dl>
 
-        <div className="connected-card__actions">
-          <button className="primary-button" type="button">
-            <MessageCircle aria-hidden="true" />
-            Создать чат
-          </button>
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={handleLogout}
-          >
-            <LogOut aria-hidden="true" />
-            Отключиться
-          </button>
-        </div>
+        {isNewChatOpen ? (
+          <NewChatForm
+            credentials={credentials}
+            messenger={messenger}
+            onCreated={(nextRecipient) => {
+              setRecipient(nextRecipient);
+              setIsNewChatOpen(false);
+            }}
+            onCancel={() => setIsNewChatOpen(false)}
+          />
+        ) : (
+          <div className="connected-card__actions">
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => setIsNewChatOpen(true)}
+            >
+              <MessageCircle aria-hidden="true" />
+              Создать чат
+            </button>
+
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={handleLogout}
+            >
+              <LogOut aria-hidden="true" />
+              Отключиться
+            </button>
+          </div>
+        )}
       </section>
     </main>
   );
